@@ -174,6 +174,7 @@ else
 fi
 
 if [[ $TEST_LIST ]];then
+	pretty_print "!!!TESTING!!!"
 	#------------------------ MAKE TESTS -----------------------------------------
 	tpassed_num=0
 	tpassed_list=""
@@ -213,4 +214,6 @@ if [[ $TEST_LIST ]];then
 	printf "PASSED_LIST = $tpassed_list\n\n"
 	printf "FAILED_NUM = $tfailed_num\n"
 	printf "FAILED_LIST = $tfailed_list\n\n"
+else
+	translate_file $INPUT_FILE $OUTPUT_FILE
 fi

@@ -19,8 +19,8 @@ def _SumRad(fi , cDate ):
 	TotalFluxRad = 0.0
 	while(True):
 		hour2 = hour1 + 1
-		if (hour2 > 12 + dl/2)
-			then hour2 = 12 + dl/2
+		if (hour2 > 12 + dl/2):
+			hour2 = 12 + dl/2
 		shour1 = sinhour(hour1,b1,b2)
 		shour2 = sinhour(hour2,b1,b2)
 		cFluxRad = 0.5*(AQR(shour1) + AQR(shour2))*(hour2-hour1)

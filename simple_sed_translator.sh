@@ -11,6 +11,13 @@ pretty_print(){
 	printf "\n--------------------\n$*\n-----------------------\n"
 }
 
+INC_TABS(){
+	new_tabs="$tabs\t"
+}
+
+DEC_TABS(){
+	new_tabs=$(echo $tabs | cut -c3-)
+}
 
 ############################## MAIN LOGIC PART #################################
 translate_file(){
@@ -18,7 +25,6 @@ translate_file(){
 	py_file=$2
 	rm -f $py_file
 	touch $py_file
-
 	tabs=""
 	new_tabs=""
 	old_tabs=""
@@ -34,11 +40,34 @@ translate_file(){
 
 		#-------------------- IF PROCESSING --------------------------------------
 		elif [[ $(echo $line | grep 'if ') ]];then
-			target_line="$(echo $target_line | sed 's/ then//'):"
+			target_line="$(echo $target_line | sed 's/ then/:/')"
+			if [[ ! $(echo $target_line | grep ':') ]];then target_line="$target_line:";fi
+
 			pretty_print $line_i "IF LINE:'$line' -> '$target_line'"
 
 			if [[ $(echo $target_line | grep ';') ]];then prev_if=""
 			else prev_if="true";new_tabs="$tabs\t";fi
+
+		#-------------------- ELSE IF PROCESSING --------------------------------------
+		elif [[ $(echo $line | grep 'else if') ]];then
+			target_line="$(echo $target_line | sed 	-e 's/ then/:/'\
+																							-e 's/else if/elif/g')"
+			if [[ ! $(echo $target_line | grep ':') ]];then target_line="$target_line:";fi
+
+			pretty_print $line_i "ELSE IF LINE:'$line' -> '$target_line'"
+
+			if [[ $(echo $target_line | grep ';') ]];then prev_if=""
+			else prev_if="true";INC_TABS;fi
+
+		#-------------------- ELSE PROCESSING --------------------------------------
+		elif [[ $(echo $line | grep 'else') ]];then
+			target_line="$(echo $target_line | sed 's/ then/:/')"
+			if [[ ! $(echo $target_line | grep ':') ]];then target_line="$target_line:";fi
+
+			pretty_print $line_i "ELSE LINE:'$line' -> '$target_line'"
+
+			if [[ $(echo $target_line | grep ';') ]];then prev_if=""
+			else prev_if="true";INC_TABS;fi
 
 		#-------------------- BEGIN PROCESSING -------------------------------------
 		elif [[ $(echo $line | grep 'begin') ]];then
@@ -46,7 +75,7 @@ translate_file(){
 			pretty_print $line_i "BEGIN LINE:'$line' -> '$target_line'"
 
 			if [[ $prev_func || $prev_if ]];then prev_func="";prev_if="";
-			else new_tabs="$tabs\t";fi
+			else INC_TABS;fi
 
 		#-------------------- FUNCTION PROCESSING ----------------------------------
 		elif [[ $(echo $line | grep 'function') ]];then
@@ -57,7 +86,7 @@ translate_file(){
 																							):"
 			pretty_print $line_i "FUNCTION LINE:'$line' -> '$target_line'"
 
-			new_tabs="$tabs\t"
+			INC_TABS
 			prev_func="true"
 
 		#-------------------- PROCEDURE PROCESSING ---------------------------------
@@ -69,7 +98,7 @@ translate_file(){
 																							):"
 			pretty_print $line_i "FUNCTION LINE:'$line' -> '$target_line'"
 
-			new_tabs="$tabs\t"
+			INC_TABS
 			prev_func="true"
 		#-------------------- VAR INT PROCESSING -----------------------------------
 		elif [[ $(echo $line | grep ': integer') ]];then
@@ -105,14 +134,14 @@ translate_file(){
 			target_line=$(echo $target_line | sed 's/end;//')
 			pretty_print $line_i "END LINE:'$line' -> '$target_line'"
 
-			new_tabs=$(echo $tabs | cut -c3-)
+			DEC_TABS
 
 		#-------------------- REPEAT PROCESSING ----------------------------------
 		elif [[ $(echo $line | grep 'repeat') ]];then
 			target_line=$(echo $target_line | sed 's/repeat/while(True):/')
 			pretty_print $line_i "REPEAT LINE:'$line' -> '$target_line'"
 
-			new_tabs="$tabs\t"
+			INC_TABS
 
 		#-------------------- UNTILL PROCESSING ----------------------------------
 		elif [[ $(echo $line | grep 'until') ]];then

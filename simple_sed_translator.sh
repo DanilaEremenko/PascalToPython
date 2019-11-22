@@ -33,8 +33,8 @@ translate_file(){
 			pretty_print $line_i "COMMENT LINE:'$line' -> '$target_line'"
 
 		#-------------------- IF PROCESSING --------------------------------------
-		elif [[ $(echo $line | grep 'if') ]];then
-			target_line=$(echo $target_line | sed 's/ then/:/')
+		elif [[ $(echo $line | grep 'if ') ]];then
+			target_line="$(echo $target_line | sed 's/ then//'):"
 			pretty_print $line_i "IF LINE:'$line' -> '$target_line'"
 
 			if [[ $(echo $target_line | grep ';') ]];then prev_if=""
@@ -100,15 +100,12 @@ translate_file(){
 			target_line="$(echo $target_line | sed 	-e 's/: array of .*/ = []/')"
 			pretty_print $line_i "ARRAY DECL LINE:'$line' -> '$target_line'"
 
-
-
 		#-------------------- END PROCESSING -------------------------------------
 		elif [[ $(echo $line | grep 'end') ]];then
 			target_line=$(echo $target_line | sed 's/end;//')
 			pretty_print $line_i "END LINE:'$line' -> '$target_line'"
 
 			new_tabs=$(echo $tabs | cut -c3-)
-
 
 		#-------------------- REPEAT PROCESSING ----------------------------------
 		elif [[ $(echo $line | grep 'repeat') ]];then
@@ -125,8 +122,16 @@ translate_file(){
 			pretty_print $line_i "UNTIL LINE:'$line' -> '$target_line'"
 			new_tabs=$(echo $tabs | cut -c3-)
 
+		#-------------------- EMPTY THEN PROCESSING ----------------------------------
+		elif [[ $(echo $line | sed 's/ //g') == 'then' ]];then
+			target_line="#EMPTY $line"
+			pretty_print $line_i "THEN LINE:'$line' -> '$target_line'"
+			new_tabs=$(echo $tabs | cut -c3-)
+
 		#-------------------- CHECK  PREV IF -------------------------------------
 		elif [[ $prev_if ]];then
+			target_line=$(echo "$target_line" | sed 's/then //')
+			pretty_print $line_i "AFTER IF LINE:'$line' -> '$target_line'"
 			prev_if=""
 			new_tabs=$(echo $tabs | cut -c3-)
 		else
